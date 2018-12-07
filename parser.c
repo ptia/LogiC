@@ -39,6 +39,54 @@ char *tokenise(char *str)
   return toks;
 }
 
+char precedence(char c) {
+  switch (c) {
+    case '=': return 8;
+    case 'A': return 7;
+    case 'E': return 7;
+    case '!': return 6;
+    case '&': return 5;
+    case '|': return 4;
+    case '>': return 3;
+    case '-': return 2;
+    case ',': return 1;
+    case '(': return 0;
+    default : return 100;
+  }
+}
+
+void parseop(char *op, struct exp_p_stack *args)
+{
+  struct Exp *parsed = malloc(sizeof(struct Exp));
+  parsed->kind = *op;
+  struct Exp *argtop = pop_exp_p_stack(args);
+  switch (*op) {
+    case 'A':
+    case 'E':
+      parsed->q_var = op + 1;
+      parsed->q_arg = argtop;
+      break;
+    case '!':
+      parsed->n_arg = argtop;
+      break;
+    case '&':
+    case '|':
+    case '>':  
+    case '-':
+      parsed->c_arg1 = pop_exp_p_stack(args);
+      parsed->c_arg2 = argtop;
+      break;
+    case ',':
+      break; //TODO
+    case '(':
+      puts("Parse error: unmatched (");
+      exit(1);
+    default:
+      break; //TODO
+  }
+  push_exp_p_stack(args, parsed);
+}
+
 struct Exp *parse(char *str) 
 {
   struct Exp *out;
@@ -54,19 +102,21 @@ struct Exp *parse(char *str)
     if (*tok == '(') {
       push_str_stack(&ops, tok);
     } else if (strchr(syms, *tok)) {
-      //TODO symbol
+      char *op;
+      while(ops.top >= 0 && precedence(*(ops.arr[ops.top]) > precedence(*tok)))
+        parseop(&ops, &args);
     } else if (*tok == ')') {
       //TODO closed bracket
     } else if (isalnum(*tok) && *next(tok) == '(') {
       //TODO func
     } else if (isupper(*tok) || isdigit(*tok)) {
       struct Exp *exp = malloc(sizeof(exp));
-      exp->type = e_const;
+      exp->kind = 'c';
       exp->vc_name = tok;
       push_exp_p_stack(&args, exp);
     } else if (islower(*tok)) {
       struct Exp *exp = malloc(sizeof(exp));
-      exp->type = e_var;
+      exp->kind = 'v';
       exp->vc_name = tok;
       push_exp_p_stack(&args, exp);
     } else {
