@@ -76,6 +76,10 @@ void parseop(char *op, struct exp_p_stack *args)
       parsed->c_arg1 = pop_exp_p_stack(args);
       parsed->c_arg2 = argtop;
       break;
+    case '=':
+      parsed->e_arg1 = pop_exp_p_stack(args);
+      parsed->e_arg2 = argtop;
+      break;
     case ',':
       break; //TODO
     case '(':
@@ -102,11 +106,15 @@ struct Exp *parse(char *str)
     if (*tok == '(') {
       push_str_stack(&ops, tok);
     } else if (strchr(syms, *tok)) {
-      char *op;
-      while(ops.top >= 0 && precedence(*(ops.arr[ops.top]) > precedence(*tok)))
-        parseop(&ops, &args);
+      for(char *op; ops.top >= 0 
+                    && precedence(*(op = pop_str_stack(&ops))) 
+                       > precedence(*tok); )
+        parseop(op, &args);
+      push_str_stack(&ops, tok);
     } else if (*tok == ')') {
-      //TODO closed bracket
+      for(char *op; ops.top >= 0 
+                    && *(op = pop_str_stack(&ops)) != '('; )
+        parseop(op, &args);
     } else if (isalnum(*tok) && *next(tok) == '(') {
       //TODO func
     } else if (isupper(*tok) || isdigit(*tok)) {
