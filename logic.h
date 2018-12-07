@@ -17,5 +17,6 @@ struct Exp {
     struct { struct Exp *n_arg; };                   // not
     struct { char *vc_name; };                       // var, const
     struct { char *rf_name; struct Exp **rf_args; }; // rel, func
+    struct { struct Exp *e_arg1, e_arg2; };          // eq
   };
 };
