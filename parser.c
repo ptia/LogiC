@@ -4,8 +4,8 @@
 #include <string.h>
 #include "logic.h"
 #include "stack.h"
-DEFINE_STACK(struct Exp*, exp_p_stack, 32)
-DEFINE_STACK(char*, str_stack, 32)
+
+#define MAX_ARITY 8
 
 char *next(char *str)
 {
@@ -81,12 +81,26 @@ void parseop(char *op, struct exp_p_stack *args)
       parsed->e_arg2 = argtop;
       break;
     case ',':
-      break; //TODO
+      if (argtop->kind == ',') {
+        free(parsed);
+        parsed = argtop;
+      } else {
+        init_exp_p_stack(&(parsed->l_args), MAX_ARITY);
+        push_exp_p_stack(&(parsed->l_args), argtop);
+      }
+      push_exp_p_stack(&(parsed->l_args), pop_exp_p_stack(&(parsed->l_args)));
+      break;
     case '(':
       puts("Parse error: unmatched (");
       exit(1);
     default:
-      break; //TODO
+      parsed->rf_name = op;
+      if (argtop->kind == ',') {
+        parsed->rf_args = (argtop->l_args).arr;
+      } else {
+        parsed->rf_args = &argtop;
+      }
+      break;
   }
   push_exp_p_stack(args, parsed);
 }
@@ -98,8 +112,8 @@ struct Exp *parse(char *str)
 
   struct str_stack ops;
   struct exp_p_stack args;
-  init_str_stack(&ops);
-  init_exp_p_stack(&args);
+  init_str_stack(&ops, 16);
+  init_exp_p_stack(&args, 16);
 
   for (char *tok = toks; *tok; tok = next(tok)) {
     printf("parsing tok %s\n", tok);

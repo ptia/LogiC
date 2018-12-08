@@ -1,44 +1,30 @@
 /* Generic stack
- * !! CAREFUL OF DUPLICATES !!
  *
- * ex.:
- * #import "stack.h"
+ * stack.c: (at the end)
  * DEFINE_STACK(int, int_stack, 256)
  * DEFINE_STACK(int*, intp_stack, 32)
+ *
+ * stack.h: (at the end)
+ * DEFINE_STACK_HEADER(struct Exp*, exp_p_stack, 32)
+ * DEFINE_STACK_HEADER(char*, str_stack, 32)
+ *
+ * somewhere_else.c:
+ * #import stack.h
  * struct intp_stack m_stack;
 */
 
 #pragma once
 
-#include <stdlib.h>
-#include <stdio.h>
-
-#define DEFINE_STACK(TYPE, STACKNAME, SIZE) \
+#define DEFINE_STACK_HEADER(TYPE, STACKNAME) \
 struct STACKNAME { \
-  TYPE arr[SIZE]; \
+  int size; \
+  TYPE *arr; \
   int top; \
 }; \
  \
-void init_ ## STACKNAME(struct STACKNAME *stack) \
-{ \
-  stack->top = -1; \
-} \
- \
-void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj) \
-{ \
-  stack->top++; \
-  if(stack->top >= SIZE) { \
-    puts("Stack Overflow!"); \
-    exit(1); \
-  } \
-  stack->arr[stack->top] = obj; \
-} \
- \
-TYPE pop_ ## STACKNAME(struct STACKNAME *stack) \
-{ \
-  if(stack->top < 0) { \
-    puts("Stack Underflow!"); \
-    exit(1); \
-  } \
-  return stack->arr[stack->top--]; \
-}
+void init_ ## STACKNAME(struct STACKNAME *stack, int size); \
+void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj); \
+TYPE pop_ ## STACKNAME(struct STACKNAME *stack); \
+
+DEFINE_STACK_HEADER(struct Exp*, exp_p_stack)
+DEFINE_STACK_HEADER(char*, str_stack)
