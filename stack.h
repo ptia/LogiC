@@ -23,6 +23,7 @@ struct STACKNAME { \
 }; \
  \
 void init_ ## STACKNAME(struct STACKNAME *stack, int size); \
+void destruct_ ## STACKNAME(struct STACKNAME *stack); \
 void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj); \
 TYPE pop_ ## STACKNAME(struct STACKNAME *stack); \
 TYPE gettop_ ##STACKNAME(struct STACKNAME *stack);

@@ -13,7 +13,11 @@ void init_ ## STACKNAME(struct STACKNAME *stack, int size) \
   stack->arr = malloc(size * sizeof(TYPE)); \
   stack->top = -1; \
 } \
- \
+void destruct_ ## STACKNAME(struct STACKNAME *stack) \
+{ \
+  free(stack->arr); \
+  stack->arr = NULL; \
+} \
 void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj) \
 { \
   stack->top++; \
@@ -40,7 +44,6 @@ TYPE gettop_ ## STACKNAME(struct STACKNAME *stack) \
   } \
   return stack->arr[stack->top]; \
 }
-// TODO: destructor
 
 // Define needed stack types here
 DEFINE_STACK(struct Exp*, exp_p_stack)
