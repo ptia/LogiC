@@ -18,7 +18,7 @@ void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj) \
 { \
   stack->top++; \
   if(stack->top >= stack->size) { \
-    puts("Stack Overflow!"); \
+    puts("Stack Overflow"); \
     exit(1); \
   } \
   stack->arr[stack->top] = obj; \
@@ -27,10 +27,18 @@ void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj) \
 TYPE pop_ ## STACKNAME(struct STACKNAME *stack) \
 { \
   if(stack->top < 0) { \
-    puts("Stack Underflow!"); \
+    puts("Stack Underflow"); \
     exit(1); \
   } \
   return stack->arr[stack->top--]; \
+} \
+TYPE gettop_ ## STACKNAME(struct STACKNAME *stack) \
+{ \
+  if(stack->top < 0) { \
+    puts("Trying to gettop from empty stack"); \
+    exit(1); \
+  } \
+  return stack->arr[stack->top]; \
 }
 // TODO: destructor
 
