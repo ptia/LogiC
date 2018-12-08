@@ -35,7 +35,7 @@ char *tokenise(char *str)
     }
     toks[j++] = '\0';
   }
-  toks[j] = '\0';
+  toks[j] = EOF;
   return toks;
 }
 
@@ -116,7 +116,7 @@ struct Exp *parse(char *str)
   init_str_stack(&ops, 16);
   init_exp_p_stack(&args, 16);
 
-  for (char *tok = toks; *tok; tok = next(tok)) {
+  for (char *tok = toks; *tok != EOF; tok = next(tok)) {
     printf("parsing tok %s\n", tok);
     if (*tok == '(') {
       push_str_stack(&ops, tok);
