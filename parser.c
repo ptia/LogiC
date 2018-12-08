@@ -85,10 +85,10 @@ void parseop(char *op, struct exp_p_stack *args)
         free(parsed);
         parsed = argtop;
       } else {
-        init_exp_p_stack(&(parsed->l_args), MAX_ARITY);
-        push_exp_p_stack(&(parsed->l_args), argtop);
+        init_exp_p_stack(&(parsed->stack), MAX_ARITY);
+        push_exp_p_stack(&(parsed->stack), argtop);
       }
-      push_exp_p_stack(&(parsed->l_args), pop_exp_p_stack(&(parsed->l_args)));
+      push_exp_p_stack(&(parsed->stack), pop_exp_p_stack(&(parsed->stack)));
       break;
     case '(':
       puts("Parse error: unmatched (");
@@ -96,7 +96,8 @@ void parseop(char *op, struct exp_p_stack *args)
     default:
       parsed->rf_name = op;
       if (argtop->kind == ',') {
-        parsed->rf_args = (argtop->l_args).arr;
+        parsed->rf_args = (argtop->stack).arr;
+        free(argtop);
       } else {
         parsed->rf_args = &argtop;
       }
