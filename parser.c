@@ -9,6 +9,8 @@
 
 #define MAX_ARITY 8
 
+#define throw(code) do {perrno = code; goto err_end;} while (1)
+
 char *next(char *str)
 {
   while(*str)
@@ -145,10 +147,8 @@ struct Exp *parse_toks(char **toks, int depth)
           goto err_end;
       }
       if (!matched) {
-        if (depth == 0) {
-          perrno = UNMATCHED_CLOSED_BRACKET;
-          goto err_end;
-        }
+        if (depth == 0)
+          throw(UNMATCHED_OPEN_BRACKET);
         break;
       }
     } /* fun/rel */
@@ -184,18 +184,19 @@ struct Exp *parse_toks(char **toks, int depth)
       perror("parse_toks(): unexpected token");
     }
   }
+  
+  if (depth == 0 && **toks == ',')
+    throw(TOP_LEVEL_COMMA);
+  if (depth && **toks == EOF)
+    throw(UNMATCHED_OPEN_BRACKET);
 
   for (char *op; ops.top >= 0; ) {
     op = pop_str_stack(&ops);
     parseop(op, &args);
   }
 
-  if (depth == 0 && **toks == ',')
-    perrno = TOP_LEVEL_COMMA;
-  else if (depth && **toks == EOF)
-    perrno = UNMATCHED_OPEN_BRACKET;
-  else if (args.top != 0)
-    perrno = ARGS_ERROR;
+  if (args.top != 0)
+    throw(ARGS_ERROR);
 
 err_end:
   ; struct Exp *out = perrno ? NULL : pop_exp_p_stack(&args);
