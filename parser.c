@@ -186,8 +186,7 @@ struct Exp *parse_toks(char **toks)
     }
     else if (**toks == ',') {
       throw(TOP_LEVEL_COMMA);
-    }
-    else {
+    } else {
       perror("parse_toks(): unexpected token");
       exit(1);
     }
