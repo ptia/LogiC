@@ -6,19 +6,19 @@
 #include <stdio.h>
 #include "stack.h"
 
-#define DEFINE_STACK(TYPE, STACKNAME) \
-void init_ ## STACKNAME(struct STACKNAME *stack, int size) \
+#define DEFINE_STACK(TYPE, TYPENAME) \
+void init_ ## TYPENAME ## _stack(struct TYPENAME ## _stack *stack, int size) \
 { \
   stack->size = size; \
   stack->arr = malloc(size * sizeof(TYPE)); \
   stack->top = -1; \
 } \
-void destruct_ ## STACKNAME(struct STACKNAME *stack) \
+void destruct_ ## TYPENAME ## _stack(struct TYPENAME ## _stack *stack) \
 { \
   free(stack->arr); \
   stack->arr = NULL; \
 } \
-void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj) \
+void push_ ## TYPENAME(struct TYPENAME ## _stack *stack, TYPE obj) \
 { \
   stack->top++; \
   if(stack->top >= stack->size) { \
@@ -28,7 +28,7 @@ void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj) \
   stack->arr[stack->top] = obj; \
 } \
  \
-TYPE pop_ ## STACKNAME(struct STACKNAME *stack) \
+TYPE pop_ ## TYPENAME(struct TYPENAME ## _stack *stack) \
 { \
   if(stack->top < 0) { \
     puts("Stack Underflow"); \
@@ -36,7 +36,7 @@ TYPE pop_ ## STACKNAME(struct STACKNAME *stack) \
   } \
   return stack->arr[stack->top--]; \
 } \
-TYPE gettop_ ## STACKNAME(struct STACKNAME *stack) \
+TYPE gettop_ ## TYPENAME(struct TYPENAME ## _stack *stack) \
 { \
   if(stack->top < 0) { \
     puts("Trying to gettop from empty stack"); \
@@ -45,6 +45,9 @@ TYPE gettop_ ## STACKNAME(struct STACKNAME *stack) \
   return stack->arr[stack->top]; \
 }
 
-// Define needed stack types here
-DEFINE_STACK(struct Exp*, exp_p_stack)
-DEFINE_STACK(char*, str_stack)
+/* Define needed stack types here
+ * Must match stack.h
+*/
+
+DEFINE_STACK(struct Exp*, exp_p)
+DEFINE_STACK(char*, str)

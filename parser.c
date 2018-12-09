@@ -45,7 +45,7 @@ char *tokenise(const char *str)
   return toks;
 }
 
-char precedence(char c) {
+char prec(char c) {
   switch (c) {
     case '=': return 8;
     case 'A': return 7;
@@ -57,7 +57,7 @@ char precedence(char c) {
     case '-': return 2;
     case '(': return 0;
     default: 
-      perror("precedence(): illegal argument\n");
+      perror("prec(): illegal argument\n");
       exit(1);
   }
 }
@@ -70,7 +70,7 @@ void parseop(char *op, struct exp_p_stack *args)
     perrno = ARGS_ERROR;
     goto end;
   }
-  struct Exp *argtop = pop_exp_p_stack(args);
+  struct Exp *argtop = pop_exp_p(args);
   switch (*op) {
     case 'A':
     case 'E':
@@ -92,7 +92,7 @@ void parseop(char *op, struct exp_p_stack *args)
         perrno = ARGS_ERROR;
         break;
       }
-      parsed->c_arg1 = pop_exp_p_stack(args);
+      parsed->c_arg1 = pop_exp_p(args);
       parsed->c_arg2 = argtop;
       break;
     case '=':
@@ -100,7 +100,7 @@ void parseop(char *op, struct exp_p_stack *args)
         perrno = ARGS_ERROR;
         break;
       }
-      parsed->e_arg1 = pop_exp_p_stack(args);
+      parsed->e_arg1 = pop_exp_p(args);
       parsed->e_arg2 = argtop;
       break;
     case '(':
@@ -115,7 +115,7 @@ end:
     free(parsed);
     return;
   }
-  push_exp_p_stack(args, parsed);
+  push_exp_p(args, parsed);
 }
 
 struct Exp *parse_toks(char **toks, int depth) 
@@ -126,21 +126,20 @@ struct Exp *parse_toks(char **toks, int depth)
   for (; **toks != EOF && **toks != ','; *toks = next(*toks)) {
     /* open bracket */
     if (**toks == '(') {
-      push_str_stack(&ops, *toks);
+      push_str(&ops, *toks);
     } /* AE!&|>-= */
     else if (strchr(syms, **toks)) {
-      while (ops.top >= 0 
-             && precedence(*gettop_str_stack(&ops)) > precedence(**toks)) {
-        char *op = pop_str_stack(&ops);
+      while (ops.top >= 0 && prec(*gettop_str(&ops)) > prec(**toks)) {
+        char *op = pop_str(&ops);
         parseop(op, &args);
         if (perrno)
           goto err_end;
       }
-      push_str_stack(&ops, *toks);
+      push_str(&ops, *toks);
     } /* closed bracket */
     else if (**toks == ')') {
       bool matched = false;
-      for (char *op; ops.top >= 0  && *(op = pop_str_stack(&ops)) != '('; ) {
+      for (char *op; ops.top >= 0  && *(op = pop_str(&ops)) != '('; ) {
         matched = true;
         parseop(op, &args);
         if (perrno)
@@ -166,13 +165,13 @@ struct Exp *parse_toks(char **toks, int depth)
           goto err_end;
         }
       }
-      push_exp_p_stack(&args, exp);
+      push_exp_p(&args, exp);
     } /* const, var */
     else if (isalnum(**toks)) {
       struct Exp *exp = malloc(sizeof(struct Exp));
       exp->kind = islower(**toks) ? 'v' : 'c';
       exp->vc_name = *toks;
-      push_exp_p_stack(&args, exp);
+      push_exp_p(&args, exp);
     }
     else {
       perror("parse_toks(): unexpected token");
@@ -184,12 +183,12 @@ struct Exp *parse_toks(char **toks, int depth)
     throw(UNMATCHED_OPEN_BRACKET);
 
   while (ops.top >= 0)
-    parseop(pop_str_stack(&ops), &args);
+    parseop(pop_str(&ops), &args);
   if (args.top != 0)
     throw(ARGS_ERROR);
 
 err_end:
-  ; struct Exp *out = perrno ? NULL : pop_exp_p_stack(&args);
+  ; struct Exp *out = perrno ? NULL : pop_exp_p(&args);
   destruct_str_stack(&ops);
   destruct_exp_p_stack(&args);
   return out;

@@ -15,18 +15,18 @@
 
 #pragma once
 
-#define DEFINE_STACK_HEADER(TYPE, STACKNAME) \
-struct STACKNAME { \
+#define DEFINE_STACK_HEADER(TYPE, TYPENAME) \
+struct TYPENAME ## _stack { \
   int size; \
   TYPE *arr; \
   int top; \
 }; \
  \
-void init_ ## STACKNAME(struct STACKNAME *stack, int size); \
-void destruct_ ## STACKNAME(struct STACKNAME *stack); \
-void push_ ## STACKNAME(struct STACKNAME *stack, TYPE obj); \
-TYPE pop_ ## STACKNAME(struct STACKNAME *stack); \
-TYPE gettop_ ##STACKNAME(struct STACKNAME *stack);
+void init_ ## TYPENAME ## _stack(struct TYPENAME ## _stack *stack, int size); \
+void destruct_ ## TYPENAME ## _stack(struct TYPENAME ## _stack *stack); \
+void push_ ## TYPENAME(struct TYPENAME ## _stack *stack, TYPE obj); \
+TYPE pop_ ## TYPENAME(struct TYPENAME ## _stack *stack); \
+TYPE gettop_ ##TYPENAME(struct TYPENAME ## _stack *stack);
 
-DEFINE_STACK_HEADER(struct Exp*, exp_p_stack)
-DEFINE_STACK_HEADER(char*, str_stack)
+DEFINE_STACK_HEADER(struct Exp*, exp_p)
+DEFINE_STACK_HEADER(char*, str)
