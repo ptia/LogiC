@@ -167,7 +167,7 @@ struct Exp *parse_toks(char **toks, int depth)
         }
       }
       push_exp_p_stack(&args, exp);
-    }/* const, var */
+    } /* const, var */
     else if (isalnum(**toks)) {
       struct Exp *exp = malloc(sizeof(struct Exp));
       exp->kind = islower(**toks) ? 'v' : 'c';
