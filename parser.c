@@ -105,7 +105,7 @@ void parseop(char *op, struct exp_p_stack *args)
       perrno = UNMATCHED_OPEN_BRACKET;
       break;
     default:
-      perror("parseop(): illegal argumnt");
+      perror("parseop(): illegal argument");
       exit(1);
   }
 end:
@@ -132,7 +132,7 @@ struct Exp *parse_toks(char **toks, int depth)
         char *op = pop_str_stack(&ops);
         parseop(op, &args);
         if (perrno)
-          goto end;
+          goto err_end;
       }
       push_str_stack(&ops, *toks);
     } /* closed bracket */
@@ -142,10 +142,15 @@ struct Exp *parse_toks(char **toks, int depth)
         matched = true;
         parseop(op, &args);
         if (perrno)
-          goto end;
+          goto err_end;
       }
-      if (!matched)
-        goto end;
+      if (!matched) {
+        if (depth == 0) {
+          perrno = UNMATCHED_CLOSED_BRACKET;
+          goto err_end;
+        }
+        break;
+      }
     } /* fun/rel */
     else if (isalnum(**toks) && *next(*toks) == '(') {
       struct Exp *exp = malloc(sizeof(struct Exp));
@@ -158,7 +163,7 @@ struct Exp *parse_toks(char **toks, int depth)
         exp->rf_args[i] = parse_toks(toks, depth + 1);
         if (perrno) {
           free(exp);
-          goto end;
+          goto err_end;
         }
       }
       push_exp_p_stack(&args, exp);
@@ -185,19 +190,15 @@ struct Exp *parse_toks(char **toks, int depth)
     parseop(op, &args);
   }
 
-end:
-  if (!perrno) {
-    if (depth == 0 && **toks == ')')
-      perrno = UNMATCHED_CLOSED_BRACKET;
-    else if (depth == 0 && **toks == ',')
-      perrno = TOP_LEVEL_COMMA;
-    else if (depth > 0 && **toks == EOF)
-      perrno = UNMATCHED_OPEN_BRACKET;
-    else if (args.top != 0)
-      perrno = ARGS_ERROR;
-  }
+  if (depth == 0 && **toks == ',')
+    perrno = TOP_LEVEL_COMMA;
+  else if (depth && **toks == EOF)
+    perrno = UNMATCHED_OPEN_BRACKET;
+  else if (args.top != 0)
+    perrno = ARGS_ERROR;
 
-  struct Exp *out = perrno ? NULL : pop_exp_p_stack(&args);
+err_end:
+  ; struct Exp *out = perrno ? NULL : pop_exp_p_stack(&args);
   destruct_str_stack(&ops);
   destruct_exp_p_stack(&args);
   return out;
