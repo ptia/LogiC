@@ -189,10 +189,8 @@ struct Exp *parse_toks(char **toks, int depth)
   if (depth && **toks == EOF)
     throw(UNMATCHED_OPEN_BRACKET);
 
-  for (char *op; ops.top >= 0; ) {
-    op = pop_str_stack(&ops);
-    parseop(op, &args);
-  }
+  while (ops.top >= 0)
+    parseop(pop_str_stack(&ops), &args);
   if (args.top != 0)
     throw(ARGS_ERROR);
 
