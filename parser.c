@@ -172,6 +172,7 @@ struct Exp *parse_toks(char **toks, bool nested)
     }
     else {
       perror("parse_toks(): unexpected token");
+      exit(1);
     }
   }
   if (!nested && **toks == ',')
