@@ -63,19 +63,15 @@ void parseop(char *op, struct exp_p_stack *args)
 {
   struct Exp *parsed = malloc(sizeof(struct Exp));
   parsed->kind = *op;
-  if(args->top < 0) {
-    perrno = ARGS_ERROR;
-    goto end;
-  }
+  if(args->top < 0)
+    throw(ARGS_ERROR);
   struct Exp *argtop = pop_exp_p(args);
   switch (*op) {
     case 'A':
     case 'E':
       parsed->q_var = op + 1;
-      if(!(parsed->q_var)) {
-        perrno = UNNAMED_QUANTIFIER;
-        break;
-      }
+      if(!*(parsed->q_var))
+        throw(UNNAMED_QUANTIFIER);
       parsed->q_arg = argtop;
       break;
     case '!':
@@ -85,29 +81,25 @@ void parseop(char *op, struct exp_p_stack *args)
     case '|':
     case '>':  
     case '-':
-      if(args->top < 0) {
-        perrno = ARGS_ERROR;
-        break;
-      }
+      if(args->top < 0)
+        throw(ARGS_ERROR);
       parsed->c_arg1 = pop_exp_p(args);
       parsed->c_arg2 = argtop;
       break;
     case '=':
-      if(args->top < 0) {
-        perrno = ARGS_ERROR;
-        break;
-      }
+      if(args->top < 0)
+        throw(ARGS_ERROR);
       parsed->e_arg1 = pop_exp_p(args);
       parsed->e_arg2 = argtop;
       break;
     case '(':
-      perrno = UNMATCHED_OPEN_BRACKET;
-      break;
+      throw(UNMATCHED_OPEN_BRACKET);
     default:
       perror("parseop(): illegal argument");
       exit(1);
   }
-end:
+
+err_end:
   if (perrno) {
     free(parsed);
     return;
