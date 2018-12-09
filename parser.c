@@ -9,7 +9,7 @@
 
 #define MAX_ARITY 8
 
-#define throw(code) do {perrno = code; goto err_end;} while (0)
+#define throw(code) do {perrno = code; goto finally;} while (0)
 
 char *next(char *str)
 {
@@ -102,7 +102,7 @@ void parse_op(char *op, struct exp_p_stack *args)
       exit(1);
   }
 
-err_end:
+finally:
   if (perrno) {
     free(parsed);
     return;
@@ -123,14 +123,16 @@ struct Exp *parse_frcv(char **toks, bool nested)
   if (*next(*toks) == '(') {
     parsed->kind = nested ? 'f' : 'r';
     parsed->rf_name = *toks;
-    parsed->rf_args = malloc(MAX_ARITY * sizeof(struct Exp *));
+    parsed->rf_args = calloc((MAX_ARITY + 1), sizeof(struct Exp *));
     *toks = next(*toks);
-    for (int i = 0; i == 0 && **toks == '(' || **toks == ','; i++) {
+    for (int i = 0; (i == 0 && **toks == '(') || **toks == ','; i++) {
+      if (i > MAX_ARITY)
+        throw(ARITY_TOO_BIG);
       *toks = next(*toks);
       parsed->rf_args[i] = parse_frcv(toks, true);
       *toks = next(*toks);
       if (perrno)
-        goto err_end; 
+        goto finally; 
     }
     if (**toks != ')')
       throw(UNMATCHED_OPEN_BRACKET);
@@ -140,51 +142,50 @@ struct Exp *parse_frcv(char **toks, bool nested)
     parsed->vc_name = *toks;
   }
 
-err_end:
+finally:
   if (perrno) {
-    if (parsed->kind == 'f')
-      free(parsed->rf_args);
-    free(parsed);
+    free_exp(parsed);
+    parsed = NULL;
   }
   return parsed;
 }
 
-struct Exp *parse_toks(char **toks) 
+struct Exp *parse_toks(char *toks) 
 {
   struct str_stack ops; init_str_stack(&ops, 16);
   struct exp_p_stack args; init_exp_p_stack(&args, 16);
 
-  for (; **toks != EOF; *toks = next(*toks)) {
+  for (char *tok = toks; *tok != EOF; tok = next(tok)) {
     /* open bracket */
-    if (**toks == '(') {
-      push_str(&ops, *toks);
+    if (*tok == '(') {
+      push_str(&ops, tok);
     } /* AE!&|>-= */
-    else if (strchr("AE!&|>-=", **toks)) {
-      while (ops.top >= 0 && prec(*gettop_str(&ops)) > prec(**toks)) {
+    else if (strchr("AE!&|>-=", *tok)) {
+      while (ops.top >= 0 && prec(*gettop_str(&ops)) > prec(*tok)) {
         char *op = pop_str(&ops);
         parse_op(op, &args);
         if (perrno)
-          goto err_end;
+          goto finally;
       }
-      push_str(&ops, *toks);
+      push_str(&ops, tok);
     } /* closed bracket */
-    else if (**toks == ')') {
+    else if (*tok == ')') {
       while(ops.top >= 0 && *gettop_str(&ops) != '(') {
         parse_op(pop_str(&ops), &args);
         if (perrno)
-          goto err_end;
+          goto finally;
       }
       if (ops.top < 0)
         throw(UNMATCHED_CLOSED_BRACKET);
       pop_str(&ops); /* pop the open bracket */
     } /* fun, rel, const, var */
-    else if (isalnum(**toks)) {
-      struct Exp *exp = parse_frcv(toks, false);
+    else if (isalnum(*tok)) {
+      struct Exp *exp = parse_frcv(&tok, false);
       if (perrno)
-        goto err_end;
+        goto finally;
       push_exp_p(&args, exp);
     }
-    else if (**toks == ',') {
+    else if (*tok == ',') {
       throw(TOP_LEVEL_COMMA);
     } else {
       perror("parse_toks(): unexpected token");
@@ -196,19 +197,35 @@ struct Exp *parse_toks(char **toks)
     parse_op(pop_str(&ops), &args);
   if (args.top != 0)
     throw(ARGS_ERROR);
+  
 
-err_end:
+finally:
   ; struct Exp *out = perrno ? NULL : pop_exp_p(&args);
+  while (args.top >= 0)
+    free_exp(pop_exp_p(&args));
   destruct_str_stack(&ops);
   destruct_exp_p_stack(&args);
   return out;
 }
 
-struct Exp *parse(const char *str)
+struct parsed_exp parse(const char *str)
 {
   perrno = 0;
   char *toks = tokenise(str);
+  struct Exp *parsed = NULL;
   if (perrno)
-    return NULL;
-  return parse_toks(&toks);
+    goto finally;
+  parsed = parse_toks(toks);
+  if (perrno)
+    goto finally;
+
+finally:
+  if (perrno) {
+    free(toks);
+    free_exp(parsed);
+    toks = NULL;
+    parsed = NULL;
+  }
+  struct parsed_exp out = {parsed, toks};
+  return out;
 }

@@ -13,3 +13,6 @@ struct Exp {
     struct { struct Exp *e_arg1, *e_arg2; };         // eq
   };
 };
+
+void print_exp(const struct Exp *exp);
+void free_exp(struct Exp *exo);

@@ -3,25 +3,29 @@
 #include "logic.h"
 #include "parser.h"
 
-int main(int argc, char **argv) {
-  char *ex1 = "Ax(!f(x)>g(x)|h(x,Constant))";
-  char *ex2 = "Ax(x = x & !!x=x)";
-  char *ex3 = "a - x = x";
+void parse_print_free(char *exp)
+{
+  struct parsed_exp parsed;
+  parsed = parse(exp);
+  if (perrno)
+    printf("perrno %d\n", perrno);
+  else {
+    print_exp(parsed.exp);
+    free_exp(parsed.exp);
+    free(parsed.toks);
+  }
+}
 
-  puts(ex1);
-  parse(ex1);
-  printf("perrno %d\n", perrno);
-
-  puts(ex2);
-  parse(ex2);
-  printf("perrno %d\n", perrno);
-
-  puts(ex3);
-  parse(ex3);
-  printf("perrno %d\n", perrno);
-
-  char in[256];
-  scanf("%[^\n]s", in);
-  parse(in);
-  printf("perrno %d\n", perrno);
+int main(int argc, char **argv)
+{
+  char *exps[] = {"Ax(!f(x)>g(x)|h(x,Constant))",
+                  "Ax(x = x & !!x=x)",
+                  "f(",
+                  "a>>",
+                  "a.",
+                  NULL};
+  for (int i = 0; exps[i] != NULL; i++) {
+    puts(exps[i]);
+    parse_print_free(exps[i]);
+  }
 }

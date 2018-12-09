@@ -8,6 +8,11 @@
 #define TOP_LEVEL_COMMA 5
 #define ARGS_ERROR 6
 #define UNNAMED_QUANTIFIER 7
+#define ARITY_TOO_BIG 8
 int perrno;
 
-struct Exp *parse(const char *str);
+struct parsed_exp {
+  struct Exp *exp;
+  char *toks;
+};
+struct parsed_exp parse(const char *str);
