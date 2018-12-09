@@ -18,9 +18,6 @@ char *next(char *str)
   return ++str;
 }
 
-char *syms = "AE!&|>-=";
-char *seps = "!&|>-=,()";
-
 char *tokenise(const char *str)
 {
   char *toks = malloc((2 * strlen(str) + 1) * sizeof(char));
@@ -29,7 +26,7 @@ char *tokenise(const char *str)
     if (isspace(str[i])) {
       i++;
       continue;
-    } else if (strchr(seps, str[i])) {
+    } else if (strchr("!&|>-=,()", str[i])) {
       toks[j++] = str[i++];
     } else if (isalnum(str[i])) {
       while (isalnum(str[i]))
@@ -118,7 +115,7 @@ end:
   push_exp_p(args, parsed);
 }
 
-struct Exp *parse_toks(char **toks, int depth) 
+struct Exp *parse_toks(char **toks, bool nested) 
 {
   struct str_stack ops; init_str_stack(&ops, 16);
   struct exp_p_stack args; init_exp_p_stack(&args, 16);
@@ -128,7 +125,7 @@ struct Exp *parse_toks(char **toks, int depth)
     if (**toks == '(') {
       push_str(&ops, *toks);
     } /* AE!&|>-= */
-    else if (strchr(syms, **toks)) {
+    else if (strchr("AE!&|>-=", **toks)) {
       while (ops.top >= 0 && prec(*gettop_str(&ops)) > prec(**toks)) {
         char *op = pop_str(&ops);
         parseop(op, &args);
@@ -146,20 +143,20 @@ struct Exp *parse_toks(char **toks, int depth)
           goto err_end;
       }
       if (!matched) {
-        if (depth == 0)
+        if (!nested)
           throw(UNMATCHED_OPEN_BRACKET);
         break;
       }
     } /* fun, rel */
     else if (isalnum(**toks) && *next(*toks) == '(') {
       struct Exp *exp = malloc(sizeof(struct Exp));
-      exp->kind = depth ? 'f' : 'r';
+      exp->kind = nested ? 'f' : 'r';
       exp->rf_name = *toks;
       exp->rf_args = malloc(MAX_ARITY * sizeof(struct Exp *));
       *toks = next(*toks);
       for (int i = 0; **toks != ')'; i++) {
         *toks = next(*toks);
-        exp->rf_args[i] = parse_toks(toks, depth + 1);
+        exp->rf_args[i] = parse_toks(toks, true);
         if (perrno) {
           free(exp);
           goto err_end;
@@ -177,9 +174,9 @@ struct Exp *parse_toks(char **toks, int depth)
       perror("parse_toks(): unexpected token");
     }
   }
-  if (depth == 0 && **toks == ',')
+  if (!nested && **toks == ',')
     throw(TOP_LEVEL_COMMA);
-  if (depth && **toks == EOF)
+  if (nested && **toks == EOF)
     throw(UNMATCHED_OPEN_BRACKET);
 
   while (ops.top >= 0)
@@ -200,5 +197,5 @@ struct Exp *parse(const char *str)
   char *toks = tokenise(str);
   if (perrno)
     return NULL;
-  return parse_toks(&toks, 0);
+  return parse_toks(&toks, false);
 }
