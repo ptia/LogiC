@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
 #include "logic.h"
@@ -14,7 +15,8 @@ char *next(char *str)
   return ++str;
 }
 
-char *syms = "!&|>-=,";
+char *syms = "AE!&|>-=";
+char *seps = "!&|>-=,()";
 
 char *tokenise(char *str)
 {
@@ -24,7 +26,7 @@ char *tokenise(char *str)
     if (isspace(str[i])) {
       i++;
       continue;
-    } else if (strchr(syms, str[i]) || strchr("()", str[i])) {
+    } else if (strchr(seps, str[i])) {
       toks[j++] = str[i++];
     } else if (isalnum(str[i])) {
       while (isalnum(str[i]))
@@ -49,9 +51,8 @@ char precedence(char c) {
     case '|': return 4;
     case '>': return 3;
     case '-': return 2;
-    case ',': return 1;
     case '(': return 0;
-    default : return 100;
+    default: exit(1);
   }
 }
 
@@ -80,73 +81,87 @@ void parseop(char *op, struct exp_p_stack *args)
       parsed->e_arg1 = pop_exp_p_stack(args);
       parsed->e_arg2 = argtop;
       break;
-    case ',':
-      if (argtop->kind == ',') {
-        free(parsed);
-        parsed = argtop;
-      } else {
-        init_exp_p_stack(&(parsed->stack), MAX_ARITY);
-        push_exp_p_stack(&(parsed->stack), argtop);
-      }
-      push_exp_p_stack(&(parsed->stack), pop_exp_p_stack(&(parsed->stack)));
-      break;
     case '(':
       puts("Parse error: unmatched (");
       exit(1);
     default:
-      parsed->rf_name = op;
-      if (argtop->kind == ',') {
-        parsed->rf_args = (argtop->stack).arr;
-        free(argtop);
-      } else {
-        parsed->rf_args = &argtop;
-      }
-      break;
+      printf("Parse error: unexpected operator %s", op);
+      exit(1);
   }
   push_exp_p_stack(args, parsed);
 }
 
-struct Exp *parse(char *str) 
+struct Exp *parse_toks(char **toks) 
 {
   struct Exp *out;
-  char *toks = tokenise(str);
+  struct str_stack ops; init_str_stack(&ops, 16);
+  struct exp_p_stack args; init_exp_p_stack(&args, 16);
 
-  struct str_stack ops;
-  struct exp_p_stack args;
-  init_str_stack(&ops, 16);
-  init_exp_p_stack(&args, 16);
-
-  for (char *tok = toks; *tok != EOF; tok = next(tok)) {
-    printf("parsing tok %s\n", tok);
-    if (*tok == '(') {
-      push_str_stack(&ops, tok);
-    } else if (strchr(syms, *tok)) {
-      for(char *op; ops.top >= 0 
-                    && precedence(*(op = pop_str_stack(&ops))) 
-                       > precedence(*tok); )
+  for (; **toks != EOF && **toks != ','; *toks = next(*toks)) {
+    if (**toks == '(') {
+      push_str_stack(&ops, *toks);
+    }
+    else if (strchr(syms, **toks)) {
+      while (ops.top >= 0 
+             && precedence(*gettop_str_stack(&ops)) > precedence(**toks)) {
+        char *op = pop_str_stack(&ops);
         parseop(op, &args);
-      push_str_stack(&ops, tok);
-    } else if (*tok == ')') {
-      for(char *op; ops.top >= 0 
-                    && *(op = pop_str_stack(&ops)) != '('; )
+      }
+      push_str_stack(&ops, *toks);
+    }
+    else if (**toks == ')') {
+      bool matched = false;
+      for (char *op; ops.top >= 0  && *(op = pop_str_stack(&ops)) != '('; ) {
+        matched = true;
         parseop(op, &args);
-    } else if (isalnum(*tok) && *next(tok) == '(') {
-      //TODO func
-    } else if (isupper(*tok) || isdigit(*tok)) {
-      struct Exp *exp = malloc(sizeof(exp));
+      }
+      if (!matched)
+        goto end;
+    }
+    else if (isalnum(**toks) && *next(*toks) == '(') {
+      struct Exp *exp = malloc(sizeof(struct Exp));
+      exp->kind = 'f';
+      exp->rf_name = *toks;
+      exp->rf_args = malloc(MAX_ARITY * sizeof(struct Exp *));
+      *toks = next(*toks);
+      for (int i = 0; **toks != ')'; i++) {
+        *toks = next(*toks);
+        exp->rf_args[i] = parse_toks(toks);
+      }
+      push_exp_p_stack(&args, exp);
+    }
+    else if (isupper(**toks) || isdigit(**toks)) {
+      struct Exp *exp = malloc(sizeof(struct Exp));
       exp->kind = 'c';
-      exp->vc_name = tok;
+      exp->vc_name = *toks;
       push_exp_p_stack(&args, exp);
-    } else if (islower(*tok)) {
-      struct Exp *exp = malloc(sizeof(exp));
+    }
+    else if (islower(**toks)) {
+      struct Exp *exp = malloc(sizeof(struct Exp));
       exp->kind = 'v';
-      exp->vc_name = tok;
+      exp->vc_name = *toks;
       push_exp_p_stack(&args, exp);
-    } else {
-      printf("Parse error: unexpected token '%s'", tok);
+    }
+    else {
+      printf("Parse error: unexpected token '%s'", *toks);
       exit(1);
     }
   }
 
+  for (char *op; ops.top >= 0; ) {
+    op = pop_str_stack(&ops);
+    parseop(op, &args);
+  }
+
+end:
+  out = pop_exp_p_stack(&args);
+  destruct_str_stack(&ops);
+  destruct_exp_p_stack(&args);
   return out;
+}
+
+struct Exp *parse(char *str)
+{
+  char *toks = tokenise(str);
+  return parse_toks(&toks);
 }
