@@ -9,7 +9,7 @@
 
 #define MAX_ARITY 8
 
-#define throw(code) do {perrno = code; goto err_end;} while (1)
+#define throw(code) do {perrno = code; goto err_end;} while (0)
 
 char *next(char *str)
 {
@@ -184,7 +184,6 @@ struct Exp *parse_toks(char **toks, int depth)
       perror("parse_toks(): unexpected token");
     }
   }
-  
   if (depth == 0 && **toks == ',')
     throw(TOP_LEVEL_COMMA);
   if (depth && **toks == EOF)
@@ -194,7 +193,6 @@ struct Exp *parse_toks(char **toks, int depth)
     op = pop_str_stack(&ops);
     parseop(op, &args);
   }
-
   if (args.top != 0)
     throw(ARGS_ERROR);
 
