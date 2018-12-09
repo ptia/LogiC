@@ -151,7 +151,7 @@ struct Exp *parse_toks(char **toks, int depth)
           throw(UNMATCHED_OPEN_BRACKET);
         break;
       }
-    } /* fun/rel */
+    } /* fun, rel */
     else if (isalnum(**toks) && *next(*toks) == '(') {
       struct Exp *exp = malloc(sizeof(struct Exp));
       exp->kind = depth ? 'f' : 'r';
@@ -167,16 +167,10 @@ struct Exp *parse_toks(char **toks, int depth)
         }
       }
       push_exp_p_stack(&args, exp);
-    } /* const */
-    else if (isupper(**toks) || isdigit(**toks)) {
+    }/* const, var */
+    else if (isalnum(**toks)) {
       struct Exp *exp = malloc(sizeof(struct Exp));
-      exp->kind = 'c';
-      exp->vc_name = *toks;
-      push_exp_p_stack(&args, exp);
-    } /* var */
-    else if (islower(**toks)) {
-      struct Exp *exp = malloc(sizeof(struct Exp));
-      exp->kind = 'v';
+      exp->kind = islower(**toks) ? 'v' : 'c';
       exp->vc_name = *toks;
       push_exp_p_stack(&args, exp);
     }
