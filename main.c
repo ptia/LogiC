@@ -21,8 +21,8 @@ int main(int argc, char **argv)
   char *exps[] = {"Ax(!f(x)>g(x)|h(x,Constant))",
                   "Ax(x = x & !!x=x)",
                   "f(",
-                  "a>>",
                   "a.",
+                  "a>>",
                   NULL};
   for (int i = 0; exps[i] != NULL; i++) {
     puts(exps[i]);

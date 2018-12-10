@@ -105,6 +105,7 @@ void parse_op(char *op, struct exp_p_stack *args)
 finally:
   if (perrno) {
     free(parsed);
+    free(argtop);
     return;
   }
   push_exp_p(args, parsed);
@@ -130,9 +131,9 @@ struct Exp *parse_frcv(char **toks, bool nested)
         throw(ARITY_TOO_BIG);
       *toks = next(*toks);
       parsed->rf_args[i] = parse_frcv(toks, true);
-      *toks = next(*toks);
       if (perrno)
         goto finally; 
+      *toks = next(*toks);
     }
     if (**toks != ')')
       throw(UNMATCHED_OPEN_BRACKET);
