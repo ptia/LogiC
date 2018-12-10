@@ -9,7 +9,8 @@
 
 #define MAX_ARITY 8
 
-#define throw(code) do {perrno = code; goto finally;} while (0)
+#define throw(err_code) do {perrno = err_code; goto finally;} while (0)
+#define try(expr) do {expr; if (perrno) goto finally;} while (0)
 
 char *next(char *str)
 {
@@ -130,9 +131,7 @@ struct Exp *parse_frcv(char **toks, bool nested)
       if (i > MAX_ARITY)
         throw(ARITY_TOO_BIG);
       *toks = next(*toks);
-      parsed->rf_args[i] = parse_frcv(toks, true);
-      if (perrno)
-        goto finally; 
+      try(parsed->rf_args[i] = parse_frcv(toks, true));
       *toks = next(*toks);
     }
     if (**toks != ')')
@@ -162,28 +161,20 @@ struct Exp *parse_toks(char *toks)
       push_str(&ops, tok);
     } /* AE!&|>-= */
     else if (strchr("AE!&|>-=", *tok)) {
-      while (ops.top >= 0 && prec(*gettop_str(&ops)) > prec(*tok)) {
-        char *op = pop_str(&ops);
-        parse_op(op, &args);
-        if (perrno)
-          goto finally;
-      }
+      while (ops.top >= 0 && prec(*gettop_str(&ops)) > prec(*tok))
+        try(parse_op(pop_str(&ops), &args));
       push_str(&ops, tok);
     } /* closed bracket */
     else if (*tok == ')') {
-      while(ops.top >= 0 && *gettop_str(&ops) != '(') {
-        parse_op(pop_str(&ops), &args);
-        if (perrno)
-          goto finally;
-      }
+      while(ops.top >= 0 && *gettop_str(&ops) != '(')
+        try(parse_op(pop_str(&ops), &args));
       if (ops.top < 0)
         throw(UNMATCHED_CLOSED_BRACKET);
       pop_str(&ops); /* pop the open bracket */
     } /* fun, rel, const, var */
     else if (isalnum(*tok)) {
-      struct Exp *exp = parse_frcv(&tok, false);
-      if (perrno)
-        goto finally;
+      struct Exp *exp;
+      try(exp = parse_frcv(&tok, false));
       push_exp_p(&args, exp);
     }
     else if (*tok == ',') {
@@ -212,13 +203,10 @@ finally:
 struct parsed_exp parse(const char *str)
 {
   perrno = 0;
-  char *toks = tokenise(str);
+  char *toks;
   struct Exp *parsed = NULL;
-  if (perrno)
-    goto finally;
-  parsed = parse_toks(toks);
-  if (perrno)
-    goto finally;
+  try(toks = tokenise(str));
+  try(parsed = parse_toks(toks));
 
 finally:
   if (perrno) {
