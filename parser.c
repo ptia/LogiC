@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 #include "logic.h"
 #include "stack.h"
 #include "parser.h"
@@ -54,9 +55,7 @@ char prec(char c) {
     case '>': return 3;
     case '-': return 2;
     case '(': return 0;
-    default: 
-      perror("prec(): illegal argument\n");
-      exit(1);
+    default: assert(false);
   }
 }
 
@@ -98,9 +97,7 @@ void parse_op(char *op, struct exp_p_stack *args)
       break;
     case '(':
       throw(UNMATCHED_OPEN_BRACKET);
-    default:
-      perror("parse_op(): illegal argument");
-      exit(1);
+    default: assert(false);
   }
 
 finally:
@@ -180,8 +177,7 @@ struct Exp *parse_toks(char *toks)
     else if (*tok == ',') {
       throw(TOP_LEVEL_COMMA);
     } else {
-      perror("parse_toks(): unexpected token");
-      exit(1);
+      assert(false);
     }
   }
 
