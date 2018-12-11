@@ -8,8 +8,7 @@ bool (*lookup_r(struct rel *rels, int relc, char *key)) (obj_t*)
   for (int i = 0; i < relc; i++)
     if (!strcmp(rels[i].name, key))
       return rels[i].func;
-  eerrno = NO_REL;
-  return NULL;
+  assert(0);
 }
 
 obj_t (*lookup_f(struct func *funcs, int funcc, char *key)) (obj_t*)
@@ -17,8 +16,7 @@ obj_t (*lookup_f(struct func *funcs, int funcc, char *key)) (obj_t*)
   for (int i = 0; i < funcc; i++)
     if (!strcmp(funcs[i].name, key))
       return funcs[i].func;
-  eerrno = NO_FUNC;
-  return NULL;
+  assert(0);
 }
 
 obj_t lookup_b(struct binding *bs, int bc, char *key)
@@ -28,8 +26,6 @@ obj_t lookup_b(struct binding *bs, int bc, char *key)
     if (!strcmp(bs[i].key, key))
       return bs[i].obj;
   assert(0);
-  eerrno = NO_BINDING;
-  return NULL;
 }
 
 obj_t eval_obj(struct Exp *exp, struct model *M, struct bind_stack *h)

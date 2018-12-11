@@ -25,9 +25,9 @@ void test_parser(char **exps, int expc)
 }
 
 
-obj_t tony = "tony";
-obj_t clyde = "clyde";
-obj_t r308 = "308";
+obj_t tony = 0;
+obj_t clyde = 1;
+obj_t r308 = 2;
 bool bought(obj_t *args)
 {
   if ((args[0] == tony && args[1] == r308)

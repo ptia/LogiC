@@ -21,7 +21,7 @@ void print_exp(const struct Exp *exp);
 void free_exp(struct Exp *exo);
 
 /* Semantics */
-typedef char* obj_t;
+typedef int obj_t; /* Any type will do here (enums are useful)! */
 struct binding {char *key; obj_t obj; };
 struct rel {char *name; bool (*func) (obj_t*); };
 struct func {char *name; obj_t (*func) (obj_t*); };
