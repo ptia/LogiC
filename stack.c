@@ -49,5 +49,7 @@ TYPE gettop_ ## TYPENAME(struct TYPENAME ## _stack *stack) \
  * Must match stack.h
 */
 
+#include "logic.h"
 DEFINE_STACK(struct Exp*, exp_p)
 DEFINE_STACK(char*, str)
+DEFINE_STACK(struct binding, bind)

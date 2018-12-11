@@ -8,8 +8,6 @@
 #include "stack.h"
 #include "parser.h"
 
-#define MAX_ARITY 8
-
 #define throw(err_code) do {perrno = err_code; goto finally;} while (0)
 #define try(expr) do {expr; if (perrno) goto finally;} while (0)
 

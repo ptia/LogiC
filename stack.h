@@ -28,5 +28,8 @@ void push_ ## TYPENAME(struct TYPENAME ## _stack *stack, TYPE obj); \
 TYPE pop_ ## TYPENAME(struct TYPENAME ## _stack *stack); \
 TYPE gettop_ ##TYPENAME(struct TYPENAME ## _stack *stack);
 
+/* Define needed stack types here */
+#include "logic.h"
 DEFINE_STACK_HEADER(struct Exp*, exp_p)
 DEFINE_STACK_HEADER(char*, str)
+DEFINE_STACK_HEADER(struct binding, bind)

@@ -1,7 +1,11 @@
 #pragma once
 
+#include <stdbool.h>
 #include "stack.h"
 
+#define MAX_ARITY 8
+
+/* Syntax */
 struct Exp {
   char kind;
   union {
@@ -13,6 +17,18 @@ struct Exp {
     struct { struct Exp *e_arg1, *e_arg2; };         // eq
   };
 };
-
 void print_exp(const struct Exp *exp);
 void free_exp(struct Exp *exo);
+
+/* Semantics */
+typedef char* obj_t;
+struct binding {char *key; obj_t obj; };
+struct rel {char *name; bool (*func) (obj_t*); };
+struct func {char *name; obj_t (*func) (obj_t*); };
+struct assignment {struct binding *bs; int bc; };
+struct model {
+  obj_t *objs; int objc;
+  struct binding *consts; int constc;
+  struct rel *rels; int relc;
+  struct func *funcs; int funcc;
+};
