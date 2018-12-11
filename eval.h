@@ -11,4 +11,4 @@
 #define NO_BINDING 5
 int eerrno;
 
-bool eval(struct Exp *exp, struct model *M, struct bind_stack *h);
+bool eval_bool(struct Exp *exp, struct model *M, struct bind_stack *h);
