@@ -50,7 +50,6 @@ void printsym(char c)
 }
 void print_exp_helper(const struct Exp *exp) 
 {
-  printf("%lc\n", L'∀');
   switch (exp->kind) {
     case 'A':
     case 'E':
