@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <wchar.h>
+#include <assert.h>
 #include "logic.h"
 
 void free_exp(struct Exp *exp)
@@ -33,16 +35,27 @@ void free_exp(struct Exp *exp)
   }
   free(exp);
 }
+
+void printsym(char c)
+{
+  switch (c) {
+    case 'A': printf("∀"); break;
+    case 'E': printf("∃"); break;
+    case '&': printf("∧"); break;
+    case '|': printf("∨"); break;
+    case '>': printf("→"); break;
+    case '-': printf("↔"); break;
+    default: assert(0);
+  }
+}
 void print_exp_helper(const struct Exp *exp) 
 {
+  printf("%lc\n", L'∀');
   switch (exp->kind) {
     case 'A':
-      printf("∀%s(", exp->q_var);
-      print_exp_helper(exp->q_arg);
-      putchar(')');
-      break;
     case 'E':
-      printf("∃%s(", exp->q_var);
+      printsym(exp->kind);
+      printf("%s(", exp->q_var);
       print_exp_helper(exp->q_arg);
       putchar(')');
       break;
@@ -52,37 +65,13 @@ void print_exp_helper(const struct Exp *exp)
       putchar(')');
       break;
     case '&':
-      putchar('(');
-      print_exp_helper(exp->c_arg1);
-      putchar(')');
-      printf("∧");
-      putchar('(');
-      print_exp_helper(exp->c_arg2);
-      putchar(')');
-      break;
     case '|':
-      putchar('(');
-      print_exp_helper(exp->c_arg1);
-      putchar(')');
-      printf("∨");
-      putchar('(');
-      print_exp_helper(exp->c_arg2);
-      putchar(')');
-      break;
     case '>':
-      putchar('(');
-      print_exp_helper(exp->c_arg1);
-      putchar(')');
-      printf("→");
-      putchar('(');
-      print_exp_helper(exp->c_arg2);
-      putchar(')');
-      break;
     case '-':
       putchar('(');
       print_exp_helper(exp->c_arg1);
       putchar(')');
-      printf("↔");
+      printsym(exp->kind);
       putchar('(');
       print_exp_helper(exp->c_arg2);
       putchar(')');
