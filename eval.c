@@ -52,8 +52,10 @@ bool eval_bool(struct Exp *exp, struct model *M, struct bind_stack *h)
       for (int i = 0; i < M->objc; i++) {
         struct binding b = {exp->q_var, M->objs[i]};
         push_bind(h, b);
-        if (!eval_bool(exp->q_arg, M, h))
+        if (!eval_bool(exp->q_arg, M, h)) {
+          pop_bind(h);
           return false;
+        }
         pop_bind(h);
       }
       return true;
@@ -61,8 +63,10 @@ bool eval_bool(struct Exp *exp, struct model *M, struct bind_stack *h)
       for (int i = 0; i < M->objc; i++) {
         struct binding b = {exp->q_var, M->objs[i]};
         push_bind(h, b);
-        if (eval_bool(exp->q_arg, M, h))
+        if (eval_bool(exp->q_arg, M, h)) {
+          pop_bind(h);
           return true;
+        }
         pop_bind(h);
       }
       return false;
@@ -86,10 +90,4 @@ bool eval_bool(struct Exp *exp, struct model *M, struct bind_stack *h)
     default:
       assert(0);
   }
-}
-
-bool eval(struct Exp *exp, struct model *M, struct bind_stack *h)
-{
-  eerrno = 0;
-
 }

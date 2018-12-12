@@ -1,4 +1,5 @@
 project(LogiC)
-add_executable(logiC main.c stack.c logic.c parser.c eval.c)
+add_executable(ex M_ex.c stack.c logic.c parser.c eval.c)
+add_executable(nat M_nat.c stack.c logic.c parser.c eval.c)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

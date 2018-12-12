@@ -92,6 +92,10 @@ void parse_op(char *op, struct exp_p_stack *args)
         throw(ARGS_ERROR);
       parsed->e_arg1 = pop_exp_p(args);
       parsed->e_arg2 = argtop;
+      if (parsed->e_arg1->kind == 'r')
+        parsed->e_arg1->kind = 'f';
+      if (parsed->e_arg2->kind == 'r')
+        parsed->e_arg2->kind = 'f';
       break;
     case '(':
       throw(UNMATCHED_OPEN_BRACKET);
@@ -180,7 +184,7 @@ struct Exp *parse_toks(char *toks)
   }
 
   while (ops.top >= 0)
-    parse_op(pop_str(&ops), &args);
+    try(parse_op(pop_str(&ops), &args));
   if (args.top != 0)
     throw(ARGS_ERROR);
   

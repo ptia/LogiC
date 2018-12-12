@@ -4,7 +4,7 @@
 #include "stack.h"
 #include "parser.h"
 #include "eval.h"
-
+#include "M_ex.h"
 #define arrsize(arr) (sizeof(arr) / sizeof(arr[0]))
 
 void test_parser(char **exps, int expc)
@@ -24,30 +24,8 @@ void test_parser(char **exps, int expc)
   }
 }
 
-
-obj_t tony = 0;
-obj_t clyde = 1;
-obj_t r308 = 2;
-bool bought(obj_t *args)
-{
-  if ((args[0] == tony && args[1] == r308)
-     || (args[0] == r308 && args[1] == clyde)
-     || (args[0] == clyde && args[1] == tony)
-     || (args[0] == tony && args[1] == tony))
-    return true;
-  return false;
-}
-
 void test_eval(char **exps, int expc)
 {
-  obj_t objs[3] = {tony, clyde, r308};
-  struct rel rels[1] = {{"bought", bought}};
-  struct binding consts[3] = {{"Daddy", tony}, {"Clyde", clyde}, "room", r308};
-  struct model M;
-  M.objs = objs; M.objc = arrsize(objs);
-  M.rels = rels; M.relc = arrsize(rels);
-  M.funcs = NULL; M.funcc = 0;
-  M.consts = consts; M.constc = arrsize(consts);
   for (int i = 0; i < expc; i++) {
     struct bind_stack h;
     init_bind_stack(&h, 16);
