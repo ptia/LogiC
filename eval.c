@@ -1,5 +1,6 @@
 #include <string.h>
 #include <assert.h>
+#include <setjmp.h>
 #include "stack.h"
 #include "eval.h"
 
@@ -8,7 +9,7 @@ bool (*lookup_r(struct rel *rels, int relc, char *key)) (obj_t*)
   for (int i = 0; i < relc; i++)
     if (!strcmp(rels[i].name, key))
       return rels[i].func;
-  assert(0);
+  longjmp(eval_eh, NO_REL);
 }
 
 obj_t (*lookup_f(struct func *funcs, int funcc, char *key)) (obj_t*)
@@ -16,7 +17,7 @@ obj_t (*lookup_f(struct func *funcs, int funcc, char *key)) (obj_t*)
   for (int i = 0; i < funcc; i++)
     if (!strcmp(funcs[i].name, key))
       return funcs[i].func;
-  assert(0);
+  longjmp(eval_eh, NO_FUNC);
 }
 
 obj_t lookup_b(struct binding *bs, int bc, char *key)
@@ -25,7 +26,7 @@ obj_t lookup_b(struct binding *bs, int bc, char *key)
   for (int i = bc - 1; i >= 0; i--)
     if (!strcmp(bs[i].key, key))
       return bs[i].obj;
-  assert(0);
+  longjmp(eval_eh, NO_BIND);
 }
 
 obj_t eval_obj(struct Exp *exp, struct model *M, struct bind_stack *h)
@@ -41,7 +42,7 @@ obj_t eval_obj(struct Exp *exp, struct model *M, struct bind_stack *h)
         args[i] = eval_obj(exp->rf_args[i], M, h);
       return (*lookup_f(M->funcs, M->funcc, exp->rf_name)) (args);
     default:
-      assert(0);
+      longjmp(eval_eh, UNEXPECTED_EXP);
   }
 }
 
@@ -88,6 +89,6 @@ bool eval_bool(struct Exp *exp, struct model *M, struct bind_stack *h)
     case '=':
       return eval_obj(exp->e_arg1, M, h) == eval_obj(exp->e_arg2, M, h);
     default:
-      assert(0);
+      longjmp(eval_eh, UNEXPECTED_EXP);
   }
 }

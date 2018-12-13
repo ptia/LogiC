@@ -1,4 +1,5 @@
-//#include "logic.c"
+#include <stdlib.h>
+#include "logic.h"
 
 #define arrsize(arr) (sizeof(arr) / sizeof(arr[0]))
 

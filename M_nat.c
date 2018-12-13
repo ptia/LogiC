@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <setjmp.h>
+#include <string.h>
 #include "logic.h"
 #include "stack.h"
 #include "parser.h"
@@ -12,20 +14,28 @@ int main()
 {
   init_M();
   char in[256];
+
   while (1) {
     struct bind_stack h;
-    init_bind_stack(&h, 256);
+    init_bind_stack(&h, 32);
     
     fgets(in, 256, stdin);
-    struct parsed_exp parsed = parse(in);
+    if (!strcmp(in, "q\n"))
+      exit(0);
 
+    struct parsed_exp parsed = parse(in);
     if (perrno) {
       printf("Parse error %d\n", perrno);
+      destruct_bind_stack(&h);
       continue;
     }
-    
     print_exp(parsed.exp);
-    printf("%d\n", eval_bool(parsed.exp, &M, &h));
+
+    int eerno = setjmp(eval_eh);
+    if (!eerno)
+      puts(eval_bool(parsed.exp, &M, &h) ? "true" : "false");
+    else
+      printf("eval error %d\n", eerno);
 
     free_exp(parsed.exp);
     free(parsed.toks);
